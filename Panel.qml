@@ -13,7 +13,7 @@ Panel {
 
   readonly property var players: {
     var all = Mpris.players ? Mpris.players.values : []
-    return all.filter(function(p) { return p && p.dbusName.indexOf("playerctld") === -1 && (p.trackTitle || p.trackArtist) })
+    return all.filter(function(p) { return p && p.dbusName.indexOf("playerctld") === -1 && p.playbackState !== MprisPlaybackState.Stopped })
   }
   readonly property var player: {
     for (var i = 0; i < players.length; i++) if (players[i].dbusName === selectedName) return players[i]
@@ -22,9 +22,15 @@ Panel {
   }
   readonly property bool hasMedia: player !== null
   readonly property bool playing: player ? player.isPlaying : false
-  readonly property string title: player ? (player.trackTitle || "") : ""
+  readonly property string title: player ? (player.trackTitle || player.identity || "") : ""
   readonly property string artist: player ? (player.trackArtist || "") : ""
   readonly property int maxChars: setting("maxChars", 32)
+  readonly property string display: setting("display", "both")
+  readonly property var displayModes: [
+    { label: "Both", value: "both" },
+    { label: "Name", value: "name" },
+    { label: "Controls", value: "controls" }
+  ]
   readonly property bool canSeek: player ? (player.canSeek && player.positionSupported && player.length > 0) : false
 
   function run(action) {
@@ -32,6 +38,17 @@ Panel {
     if (action === "previous" && player.canGoPrevious) player.previous()
     else if (action === "next" && player.canGoNext) player.next()
     else if (action === "playPause" && player.canTogglePlaying) player.togglePlaying()
+  }
+
+  function setDisplay(value) {
+    var next = Object.assign({}, settings)
+    next.display = value
+    if (bar && bar.shell) bar.shell.updateEntryInline(moduleName, next)
+  }
+
+  function press(button, action) {
+    if (button === Qt.RightButton) toggle()
+    else run(action)
   }
 
   function shortLabel() {
@@ -63,27 +80,29 @@ Panel {
     id: controls
 
     WidgetButton {
-      id: prevButton
       bar: root.bar
       text: "󰒮"
       horizontalMargin: 5
+      visible: root.display !== "name"
       dimmed: !(root.player && root.player.canGoPrevious)
-      onPressed: function(b) { root.run("previous") }
+      onPressed: function(b) { root.press(b, "previous") }
     }
 
     WidgetButton {
       bar: root.bar
       text: root.playing ? "󰏤" : "󰐊"
       horizontalMargin: 5
-      onPressed: function(b) { root.run("playPause") }
+      visible: root.display !== "name"
+      onPressed: function(b) { root.press(b, "playPause") }
     }
 
     WidgetButton {
       bar: root.bar
       text: "󰒭"
       horizontalMargin: 5
+      visible: root.display !== "name"
       dimmed: !(root.player && root.player.canGoNext)
-      onPressed: function(b) { root.run("next") }
+      onPressed: function(b) { root.press(b, "next") }
     }
 
     WidgetButton {
@@ -92,6 +111,7 @@ Panel {
       text: root.shortLabel()
       fontSize: 12
       horizontalMargin: 6
+      visible: root.display !== "controls"
       tooltipText: root.title + (root.artist ? " · " + root.artist : "")
       onPressed: function(b) { root.toggle() }
     }
@@ -99,7 +119,7 @@ Panel {
 
   KeyboardPanel {
     id: panel
-    anchorItem: titleButton
+    anchorItem: controls
     owner: root
     bar: root.bar
     open: root.opened && root.hasMedia
@@ -265,6 +285,46 @@ Panel {
         }
 
         PanelSeparator {
+          foreground: root.bar.foreground
+        }
+
+        Column {
+          width: parent.width
+          spacing: Style.space(10)
+
+          PanelSectionHeader {
+            text: "DISPLAY"
+            foreground: root.bar.foreground
+            fontFamily: root.bar.fontFamily
+          }
+
+          Row {
+            id: displayRow
+            width: parent.width
+            spacing: Style.space(6)
+
+            readonly property real cellWidth: (width - spacing * (root.displayModes.length - 1)) / root.displayModes.length
+
+            Repeater {
+              model: root.displayModes
+              Button {
+                required property var modelData
+                width: displayRow.cellWidth
+                text: modelData.label
+                fontSize: Style.font.bodySmall
+                foreground: root.bar.foreground
+                fontFamily: root.bar.fontFamily
+                horizontalPadding: Style.spacing.controlPaddingX
+                verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
+                bordered: true
+                active: root.display === modelData.value
+                onClicked: root.setDisplay(modelData.value)
+              }
+            }
+          }
+        }
+
+        PanelSeparator {
           visible: root.players.length > 1
           foreground: root.bar.foreground
         }
@@ -281,7 +341,7 @@ Panel {
               required property var modelData
               width: parent.width
               leftAlign: true
-              text: (modelData.isPlaying ? "󰏤  " : "󰐊  ") + (modelData.trackTitle || modelData.identity || "Media source")
+              text: (modelData.isPlaying ? "󰏤  " : "󰐊  ") + (modelData.trackTitle || modelData.identity)
               fontSize: Style.font.bodySmall
               foreground: root.bar.foreground
               fontFamily: root.bar.fontFamily

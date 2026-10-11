@@ -13,13 +13,14 @@ git clone https://github.com/gabrielsitta4/omarchy-media ~/Documents/Projects/om
 mkdir -p ~/.config/omarchy/plugins
 ln -s ~/Documents/Projects/omarchy-media ~/.config/omarchy/plugins/local.media
 omarchy-shell shell rescanPlugins
-omarchy bar put local.media --before omarchy.audio
+omarchy bar put local.media --section right --index 0
 ```
 
 ## Use
 
-- The buttons skip back, play/pause and skip forward. The widget hides itself when nothing is playing.
-- Click the track name to open the popup. Drag the bar to jump inside the track.
+- The buttons skip back, play/pause and skip forward. Any MPRIS player counts (music, videos, mpv). The widget stays while a player is playing or paused and hides when there is none.
+- Click the track name, or right click any button, to open the popup. Drag the bar to jump inside the track.
+- Pick what the bar shows under DISPLAY in the popup: the buttons and the name, only the name, or only the buttons. Same from the terminal: `omarchy bar set local.media display name` (`both`, `name`, `controls`).
 - With more than one player open, the popup lists them so you can pick which one the buttons control.
 - Track name length on the bar: `omarchy bar set local.media maxChars 40`.
 
