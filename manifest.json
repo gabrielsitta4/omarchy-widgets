@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "local.drawer",
+  "name": "Drawer",
+  "version": "1.0.0",
+  "author": "local",
+  "description": "Collapse the right side widgets into a drawer with pin and hide",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Drawer.qml"
+  },
+  "barWidget": {
+    "displayName": "Drawer",
+    "description": "Collapse the right side widgets into a drawer with pin and hide",
+    "category": "System",
+    "allowMultiple": false
+  }
+}
