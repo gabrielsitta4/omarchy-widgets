@@ -43,7 +43,7 @@ gpu_busy=$(cat "$gpu_device/gpu_busy_percent" 2>/dev/null)
 vram_used=$(awk '{ printf "%.1f", $1 / 1073741824 }' "$gpu_device/mem_info_vram_used" 2>/dev/null)
 vram_total=$(awk '{ printf "%.0f", $1 / 1073741824 }' "$gpu_device/mem_info_vram_total" 2>/dev/null)
 
-text="CPU ${cpu}% ${cpu_temp}°  RAM ${mem_used}G  GPU ${gpu_busy}% ${gpu_temp}°"
+text=" ${cpu}% ${cpu_temp}°   ${mem_used}G  󰢮 ${gpu_busy}% ${gpu_temp}°"
 tooltip="CPU ${cpu}% at ${cpu_temp}°C\\nRAM ${mem_used} / ${mem_total} GB\\nGPU ${gpu_busy}% at ${gpu_temp}°C (junction)\\nVRAM ${vram_used} / ${vram_total} GB"
 
 printf '{"text":"%s","tooltip":"%s"}\n' "$text" "$tooltip"

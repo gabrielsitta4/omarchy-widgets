@@ -7,10 +7,10 @@
 Bar module for the Omarchy shell that shows CPU usage and temperature, RAM in use, and GPU usage and temperature.
 
 ```
-CPU 2% 43°  RAM 8.1G  GPU 0% 45°
+ 2% 43°   8.1G  󰢮 0% 45°
 ```
 
-Hover it to see RAM and VRAM totals. Click it to open `btop`.
+Icons are CPU, RAM and GPU, drawn with a Nerd Font (JetBrainsMono Nerd Font comes with Omarchy). Hover it to see RAM and VRAM totals. Click it to open `btop`.
 
 Needs an AMD CPU (`k10temp` sensor) and an AMD GPU (`amdgpu` sensor). Sensors are found by name, so it keeps working when the hwmon numbers change after a reboot.
 
