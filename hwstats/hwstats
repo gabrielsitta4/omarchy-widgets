@@ -1,0 +1,49 @@
+#!/bin/bash
+
+read_temp() {
+  local file=$1
+  [ -r "$file" ] && echo $(( $(cat "$file") / 1000 ))
+}
+
+hwmon_by_label() {
+  local name=$1 label=$2
+  for dir in /sys/class/hwmon/hwmon*; do
+    [ "$(cat "$dir/name" 2>/dev/null)" = "$name" ] || continue
+    for lbl in "$dir"/temp*_label; do
+      if [ "$(cat "$lbl" 2>/dev/null)" = "$label" ]; then
+        echo "${lbl%_label}_input"
+        return
+      fi
+    done
+  done
+}
+
+cpu_sample() {
+  awk 'NR == 1 { idle = $5 + $6; total = 0; for (i = 2; i <= NF; i++) total += $i; print idle, total }' /proc/stat
+}
+
+read idle1 total1 < <(cpu_sample)
+sleep 0.5
+read idle2 total2 < <(cpu_sample)
+cpu=$(( 100 * ( (total2 - total1) - (idle2 - idle1) ) / (total2 - total1) ))
+
+read mem_used mem_total < <(awk '
+  /^MemTotal:/ { total = $2 }
+  /^MemAvailable:/ { avail = $2 }
+  END { printf "%.1f %.0f\n", (total - avail) / 1048576, total / 1048576 }
+' /proc/meminfo)
+
+cpu_temp_file=$(hwmon_by_label k10temp Tctl)
+gpu_temp_file=$(hwmon_by_label amdgpu junction)
+cpu_temp=$(read_temp "$cpu_temp_file")
+gpu_temp=$(read_temp "$gpu_temp_file")
+
+gpu_device=$(readlink -f "$(dirname "$gpu_temp_file")/device")
+gpu_busy=$(cat "$gpu_device/gpu_busy_percent" 2>/dev/null)
+vram_used=$(awk '{ printf "%.1f", $1 / 1073741824 }' "$gpu_device/mem_info_vram_used" 2>/dev/null)
+vram_total=$(awk '{ printf "%.0f", $1 / 1073741824 }' "$gpu_device/mem_info_vram_total" 2>/dev/null)
+
+text=" ${cpu}% ${cpu_temp}°   ${mem_used}G  󰢮 ${gpu_busy}% ${gpu_temp}°"
+tooltip="CPU ${cpu}% at ${cpu_temp}°C\\nRAM ${mem_used} / ${mem_total} GB\\nGPU ${gpu_busy}% at ${gpu_temp}°C (junction)\\nVRAM ${vram_used} / ${vram_total} GB"
+
+printf '{"text":"%s","tooltip":"%s"}\n' "$text" "$tooltip"
