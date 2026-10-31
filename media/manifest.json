@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "local.media",
+  "name": "Media",
+  "version": "1.0.0",
+  "author": "local",
+  "description": "Media controls with track info and seek bar",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Media",
+    "description": "Previous, play/pause, next and current track with seek bar popup",
+    "category": "Media",
+    "allowMultiple": false
+  }
+}
