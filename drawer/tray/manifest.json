@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "local.tray",
+  "name": "Drawer tray",
+  "version": "1.0.0",
+  "author": "Omarchy",
+  "description": "System tray that follows local.drawer",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Tray.qml"
+  },
+  "barWidget": {
+    "displayName": "Drawer tray",
+    "description": "System tray that follows local.drawer",
+    "category": "Status",
+    "allowMultiple": false
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.tray"
+  }
+}
