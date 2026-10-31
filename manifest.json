@@ -4,7 +4,7 @@
   "name": "Headset",
   "version": "1.0.0",
   "author": "local",
-  "description": "Logitech G733 battery, sidetone, lights and microphone",
+  "description": "Logitech G733 battery, sidetone and lights in the audio panel",
   "kinds": [
     "bar-widget"
   ],
@@ -13,7 +13,7 @@
   },
   "barWidget": {
     "displayName": "Headset",
-    "description": "Logitech G733 battery, sidetone, lights and microphone",
+    "description": "Logitech G733 battery, sidetone and lights in the audio panel",
     "category": "Audio",
     "allowMultiple": false
   }

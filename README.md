@@ -4,7 +4,7 @@
 [![Quickshell](https://img.shields.io/badge/Quickshell-plugin-54a3d8?style=for-the-badge)](https://quickshell.org/)
 [![License](https://img.shields.io/badge/license-GPL--3.0-green?style=for-the-badge)](LICENSE)
 
-Bar widget for the Omarchy shell for the Logitech G733: battery, sidetone, lights and microphone.
+Logitech G733 battery, sidetone and lights inside the audio panel of the Omarchy shell.
 
 ## Install
 
@@ -30,8 +30,9 @@ Check that the headset is found with `headsetcontrol -b`.
 
 ## Use
 
-- The icon shows the battery level and hides itself while the headset is off.
-- Click it to change sidetone, turn the lights on or off, mute the microphone and set its volume.
+- While the headset is on and set as the output, the audio icon shows the battery level and the audio panel shows its settings.
+- Click the audio icon to change sidetone and turn the lights on or off, at the end of the audio panel. The microphone stays in the INPUT section of that panel.
+- If the audio panel can't be reached, for example after an Omarchy update changes it, the widget shows its own icon and panel instead.
 - The lights setting is saved in `~/.local/state/headset` and applied again when the headset turns on.
 
 ## Update
