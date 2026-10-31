@@ -22,7 +22,6 @@ Panel {
     "omarchy.agents": "󰚩",
     "omarchy.bluetooth": "󰂯",
     "omarchy.network": "󰖩",
-    "local.cameras": "󰄀",
     "local.apps": "󰀻",
     "local.headset": "󰋎",
     "omarchy.audio": "󰕾",
