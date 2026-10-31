@@ -199,7 +199,7 @@ Panel {
   component HeadsetSection: Column {
     width: parent ? parent.width : 0
     spacing: Style.space(14)
-    visible: root.online && (!root.injected || root.headsetIsOutput)
+    visible: root.online
 
     PanelSeparator {
       visible: root.injected

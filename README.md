@@ -100,7 +100,7 @@ omarchy bar put local.headset --before omarchy.audio
 
 Check that the headset is found with `headsetcontrol -b`.
 
-- While the headset is on and set as the output, the audio icon shows the battery level and the audio panel shows its settings.
+- While the headset is on, the audio panel shows its settings, whatever the output. While it is also set as the output, the audio icon shows the battery level.
 - Click the audio icon to change sidetone and turn the lights on or off, at the end of the audio panel. The microphone stays in the INPUT section of that panel.
 - If the audio panel can't be reached, for example after an Omarchy update changes it, the widget shows its own icon and panel instead.
 - The lights setting is saved in `~/.local/state/headset` and applied again when the headset turns on.
