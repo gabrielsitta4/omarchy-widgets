@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "local.headset",
+  "name": "Headset",
+  "version": "1.0.0",
+  "author": "local",
+  "description": "Logitech G733 battery, sidetone and lights in the audio panel",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Headset",
+    "description": "Logitech G733 battery, sidetone and lights in the audio panel",
+    "category": "Audio",
+    "allowMultiple": false
+  }
+}

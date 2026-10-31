@@ -1,0 +1,17 @@
+#!/bin/bash
+state=~/.local/state/headset
+battery=$(headsetcontrol -b -o json 2>/dev/null | jq -c '
+  .devices[0].battery
+  | select(.status == "BATTERY_AVAILABLE" or .status == "BATTERY_CHARGING")')
+
+if [[ -z $battery ]]; then
+  rm -f "$state/online"
+  exit 0
+fi
+
+mkdir -p "$state"
+if [[ ! -e $state/online ]] && { [[ ! -e $state/light ]] || headsetcontrol -l "$(<"$state/light")" >/dev/null; }; then
+  touch "$state/online"
+fi
+
+echo "$battery"

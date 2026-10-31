@@ -1,0 +1,9 @@
+#!/bin/bash
+case $1 in
+  sidetone) flag=-s ;;
+  light) flag=-l ;;
+  *) exit 1 ;;
+esac
+headsetcontrol "$flag" "$2" >/dev/null || exit 1
+mkdir -p ~/.local/state/headset
+echo "$2" > ~/.local/state/headset/"$1"
