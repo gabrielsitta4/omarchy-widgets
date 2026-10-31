@@ -1,0 +1,24 @@
+#!/bin/bash
+pid=${1:-$(hyprctl activewindow -j | jq -r '.pid // empty')}
+[[ $pid =~ ^[0-9]+$ && $pid -gt 1 && -d /proc/$pid ]] || exit 1
+
+descendants() {
+  local child
+  for child in $(pgrep -P "$1"); do descendants "$child"; done
+  echo "$1"
+}
+
+name=$(ps -o comm= -p "$pid")
+targets=$(descendants "$pid")
+
+game=$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | sed -n 's/^SteamGameId=//p')
+if [[ -n $game ]]; then
+  for env in /proc/[0-9]*/environ; do
+    grep -qzx "SteamGameId=$game" "$env" 2>/dev/null && targets+=$'\n'$(basename "$(dirname "$env")")
+  done
+fi
+
+targets=$(sort -un <<<"$targets" | grep -vx "$$")
+kill -9 $targets 2>/dev/null
+notify-send -u low "Force killed" "${name:-PID $pid}" 2>/dev/null
+exit 0

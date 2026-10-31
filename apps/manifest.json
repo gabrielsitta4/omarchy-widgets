@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "local.apps",
+  "name": "Apps",
+  "version": "1.0.0",
+  "author": "local",
+  "description": "Open windows with a force kill button",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Apps",
+    "description": "Open windows with a force kill button",
+    "category": "System",
+    "allowMultiple": false
+  }
+}
