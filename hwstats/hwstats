@@ -58,6 +58,7 @@ vram_used=$(awk '{ printf "%.1f", $1 / 1073741824 }' "$gpu_device/mem_info_vram_
 vram_total=$(awk '{ printf "%.0f", $1 / 1073741824 }' "$gpu_device/mem_info_vram_total" 2>/dev/null)
 
 text=" ${cpu}% ${cpu_temp}°   ${mem_used}G  󰢮 ${gpu_busy}% ${gpu_temp}°"
+names="CPU ${cpu}% ${cpu_temp}°  RAM ${mem_used}G  GPU ${gpu_busy}% ${gpu_temp}°"
 tooltip="CPU ${cpu}% at ${cpu_temp}°C\\nRAM ${mem_used} / ${mem_total} GB\\nGPU ${gpu_busy}% at ${gpu_temp}°C (junction)\\nVRAM ${vram_used} / ${vram_total} GB"
 
 gpu_hwmon=$(dirname "$gpu_temp_file")
@@ -85,4 +86,4 @@ for dir in /sys/class/hwmon/hwmon*; do
     "$(scaled "$(cat "$igpu_device/mem_info_vram_total" 2>/dev/null)" 1048576)")
 done
 
-printf '{"text":"%s","tooltip":"%s","gpu":%s,"igpu":%s}\n' "$text" "$tooltip" "$gpu_json" "$igpu_json"
+printf '{"text":"%s","names":"%s","tooltip":"%s","gpu":%s,"igpu":%s}\n' "$text" "$names" "$tooltip" "$gpu_json" "$igpu_json"

@@ -13,6 +13,12 @@ Panel {
   readonly property int historySize: 20
   readonly property color dimForeground: root.bar ? Qt.darker(root.bar.foreground, 1.4) : "transparent"
 
+  readonly property string display: setting("display", "icons")
+  readonly property var displayModes: [
+    { label: "Icons", value: "icons" },
+    { label: "Names", value: "names" }
+  ]
+
   property var stats: ({})
   property var usageHistory: []
   readonly property var gpu: stats.gpu || ({})
@@ -24,6 +30,12 @@ Panel {
     if (!next) return
     stats = next
     usageHistory = usageHistory.concat([next.gpu.busy]).slice(-historySize)
+  }
+
+  function setDisplay(value) {
+    var next = Object.assign({}, settings)
+    next.display = value
+    if (bar && bar.shell) bar.shell.updateEntryInline(moduleName, next)
   }
 
   function fanText() {
@@ -99,7 +111,7 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.stats.text || ""
+    text: (root.display === "names" ? root.stats.names : root.stats.text) || ""
     tooltipText: root.stats.tooltip || ""
     fontSize: 12
     horizontalMargin: 7.5
@@ -190,6 +202,37 @@ Panel {
           visible: root.igpu !== null
           label: "VRAM"
           value: root.igpu ? root.igpu.vramUsedMb + " / " + root.igpu.vramTotalMb + " MB" : ""
+        }
+
+        PanelSectionHeader {
+          text: "DISPLAY"
+          foreground: root.bar.foreground
+          fontFamily: root.bar.fontFamily
+        }
+
+        Row {
+          id: displayRow
+          width: parent.width
+          spacing: Style.space(6)
+
+          readonly property real cellWidth: (width - spacing * (root.displayModes.length - 1)) / root.displayModes.length
+
+          Repeater {
+            model: root.displayModes
+            Button {
+              required property var modelData
+              width: displayRow.cellWidth
+              text: modelData.label
+              fontSize: Style.font.bodySmall
+              foreground: root.bar.foreground
+              fontFamily: root.bar.fontFamily
+              horizontalPadding: Style.spacing.controlPaddingX
+              verticalPadding: Style.spacing.controlPaddingY + Style.space(2)
+              bordered: true
+              active: root.display === modelData.value
+              onClicked: root.setDisplay(modelData.value)
+            }
+          }
         }
 
         Button {
