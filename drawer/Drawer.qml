@@ -242,7 +242,14 @@ Panel {
     fontSize: Style.font.bodySmall
   }
 
-  implicitWidth: hiddenTrayIcons.implicitWidth
+  component HiddenDivider: Rectangle {
+    width: parent ? parent.width : 0
+    height: 1
+    y: -Style.space(4)
+    opacity: 0.35
+  }
+
+  implicitWidth: button.width + hiddenTrayIcons.implicitWidth
   implicitHeight: button.implicitHeight
 
   FileView {
@@ -284,21 +291,22 @@ Panel {
 
   WidgetButton {
     id: button
-    anchors.right: parent.left
+    anchors.left: parent.left
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    width: 6
+    width: root.revealing ? implicitWidth : 0
     bar: root.bar
-    text: "\uf054"
-    concealed: true
+    text: "\uf013"
+    tooltipText: "Bar widgets"
+    concealed: !root.revealing
     fontSize: 12
     horizontalMargin: 7.5
-    onPressed: function(b) { if (b === Qt.RightButton) root.toggle() }
+    onPressed: root.toggle()
   }
 
   Row {
     id: hiddenTrayIcons
-    anchors.left: parent.left
+    anchors.left: button.right
     anchors.verticalCenter: parent.verticalCenter
 
     Repeater {
@@ -352,9 +360,15 @@ Panel {
           Item {
             id: row
             required property string modelData
+            required property int index
             readonly property bool isHidden: root.hiddenIds.indexOf(modelData) !== -1
             width: column.width
             implicitHeight: 28
+
+            HiddenDivider {
+              visible: !row.isHidden && row.index > 0 && root.hiddenIds.indexOf(root.itemRows[row.index - 1]) !== -1
+              color: root.bar.foreground
+            }
 
             Text {
               id: widgetIconText
@@ -431,10 +445,16 @@ Panel {
           Item {
             id: trayRow
             required property var modelData
+            required property int index
             readonly property string itemId: String(modelData.id || "")
             readonly property bool isHidden: root.trayHiddenIds.indexOf(itemId) !== -1
             width: column.width
             implicitHeight: 28
+
+            HiddenDivider {
+              visible: !trayRow.isHidden && trayRow.index > 0 && root.trayHiddenIds.indexOf(root.trayRowIds[trayRow.index - 1]) !== -1
+              color: root.bar.foreground
+            }
 
             Image {
               id: trayIconImage
