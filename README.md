@@ -13,6 +13,7 @@ Bar widgets for the Omarchy shell. Install only the ones you want.
 | [`headset`](#headset) | Logitech G733 battery, sidetone and lights in the audio panel |
 | [`hwstats`](#hwstats) | CPU, RAM and GPU stats with a GPU details panel |
 | [`media`](#media) | Media controls for any MPRIS player |
+| [`workspaces`](#workspaces) | Shows only the workspaces in use, with fewer on a TV |
 
 ## Install
 
@@ -80,7 +81,18 @@ To remove it, run the line below, delete the `local.drawer` entry from `~/.confi
 sed -i 's/"local.tray"/"omarchy.tray"/' ~/.config/omarchy/shell.json
 ```
 
-`drawer/tray` is based on the Omarchy tray widget and keeps its MIT license (`drawer/tray/LICENSE`).
+## Workspaces
+
+Shows workspaces 1 and 2, or only 1 on a TV. Any other workspace shows up while it has windows or focus. The TV is matched by screen model in `onTv` in `Workspaces.qml` (`LG TV`), so change that text for another screen.
+
+```bash
+ln -s ~/Documents/Projects/omarchy-widgets/workspaces ~/.config/omarchy/plugins/local.workspaces
+omarchy-shell shell rescanPlugins
+sed -i 's/"omarchy.workspaces"/"local.workspaces"/' ~/.config/omarchy/shell.json
+omarchy restart shell
+```
+
+`drawer/tray` and `workspaces` are based on Omarchy widgets and keep their MIT license (`LICENSE` in each folder).
 
 ## Headset
 
