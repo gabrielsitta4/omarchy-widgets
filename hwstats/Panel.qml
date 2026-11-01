@@ -28,9 +28,9 @@ Panel {
       { text: stats.cpu + "%", value: stats.cpu, warning: 70, critical: 90 },
       { text: " " },
       { text: stats.cpuTemp + "°", value: stats.cpuTemp, warning: 75, critical: 85 },
-      { text: names ? "  RAM " : "   \uefc5 " },
+      { text: names ? " RAM " : " \uefc5 " },
       { text: stats.memUsed + "G", value: 100 * stats.memUsed / stats.memTotal, warning: 70, critical: 90 },
-      { text: names ? "  GPU " : "  󰢮 " },
+      { text: names ? " GPU " : " 󰢮 " },
       { text: stats.gpuBusy + "%", value: stats.gpuBusy, warning: 70, critical: 90 },
       { text: " " },
       { text: stats.gpuTemp + "°", value: stats.gpuTemp, warning: 85, critical: 100 }
@@ -152,6 +152,7 @@ Panel {
 
     Text {
       anchors.centerIn: parent
+      anchors.verticalCenterOffset: 1
       textFormat: Text.StyledText
       text: root.barMarkup()
       color: button.foreground

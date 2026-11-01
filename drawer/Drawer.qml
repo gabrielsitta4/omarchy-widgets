@@ -343,7 +343,10 @@ Panel {
     parent: root.slotRow
     model: root.slotRow ? root.trayItems : []
     delegate: root.trayWidget ? root.trayWidget.itemDelegate : null
-    onItemAdded: Qt.callLater(root.applyVisibility)
+    onItemAdded: function(index, item) {
+      item.height = root.bar.barSize
+      Qt.callLater(root.applyVisibility)
+    }
   }
 
   KeyboardPanel {
