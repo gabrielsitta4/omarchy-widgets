@@ -19,6 +19,24 @@ Panel {
     { label: "Names", value: "names" }
   ]
 
+  readonly property color warningColor: "#e5c07b"
+  readonly property var barParts: {
+    if (stats.cpu === undefined) return []
+    var names = display === "names"
+    return [
+      { text: names ? "CPU " : "\uf4bc " },
+      { text: stats.cpu + "%", value: stats.cpu, warning: 70, critical: 90 },
+      { text: " " },
+      { text: stats.cpuTemp + "°", value: stats.cpuTemp, warning: 75, critical: 85 },
+      { text: names ? "  RAM " : "   \uefc5 " },
+      { text: stats.memUsed + "G", value: 100 * stats.memUsed / stats.memTotal, warning: 70, critical: 90 },
+      { text: names ? "  GPU " : "  󰢮 " },
+      { text: stats.gpuBusy + "%", value: stats.gpuBusy, warning: 70, critical: 90 },
+      { text: " " },
+      { text: stats.gpuTemp + "°", value: stats.gpuTemp, warning: 85, critical: 100 }
+    ]
+  }
+
   property var stats: ({})
   property var usageHistory: []
   readonly property var gpu: stats.gpu || ({})
@@ -30,6 +48,20 @@ Panel {
     if (!next) return
     stats = next
     usageHistory = usageHistory.concat([next.gpu.busy]).slice(-historySize)
+  }
+
+  function partColor(part) {
+    if (part.value >= part.critical) return String(bar.urgent)
+    if (part.value >= part.warning) return String(warningColor)
+    return ""
+  }
+
+  function barMarkup() {
+    return barParts.map(function(part) {
+      var text = part.text.replace(/ /g, "\u00a0")
+      var color = partColor(part)
+      return color ? '<font color="' + color + '">' + text + "</font>" : text
+    }).join("")
   }
 
   function setDisplay(value) {
@@ -111,11 +143,22 @@ Panel {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: (root.display === "names" ? root.stats.names : root.stats.text) || ""
+    text: root.barParts.map(function(part) { return part.text }).join("")
+    labelVisible: false
     tooltipText: root.stats.tooltip || ""
     fontSize: 12
     horizontalMargin: 7.5
     onPressed: function(b) { root.toggle() }
+
+    Text {
+      anchors.centerIn: parent
+      textFormat: Text.StyledText
+      text: root.barMarkup()
+      color: button.foreground
+      font.family: button.fontFamily
+      font.pixelSize: button.fontSize
+      renderType: Text.NativeRendering
+    }
   }
 
   KeyboardPanel {
