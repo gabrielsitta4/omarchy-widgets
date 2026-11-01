@@ -220,6 +220,13 @@ Panel {
       rightSection = slotRow.parent
       centerContent = sections[i].children[0].item
       centerContent.transform = [centerShift]
+      Array.from(centerContent.children).forEach(function(item) {
+        if (item.moduleName === "omarchy.clock") item.transform = [clockTextShift]
+        if (!item.item) return
+        Array.from(item.item.children).forEach(function(slot) {
+          if (slot.moduleName === "omarchy.weather") slot.transform = [weatherIconShift]
+        })
+      })
       return
     }
   }
@@ -296,6 +303,17 @@ Panel {
   Translate {
     id: centerShift
     x: -root.centerOverlap
+  }
+
+  Translate {
+    id: clockTextShift
+    y: 1
+  }
+
+  Translate {
+    id: weatherIconShift
+    x: -6
+    y: -2
   }
 
   Timer {

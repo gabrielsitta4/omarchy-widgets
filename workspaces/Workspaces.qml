@@ -72,6 +72,7 @@ BarWidget {
         verticalPadding: 6
         fixedWidth: root.vertical ? root.barSize : Style.space(20)
         fixedHeight: root.barSize
+        transform: Translate { y: focused ? 0 : 1 }
         onPressed: function() { root.focusWorkspace(modelData) }
       }
     }
