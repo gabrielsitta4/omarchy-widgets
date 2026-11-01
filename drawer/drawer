@@ -31,7 +31,8 @@ def sync(drawer, right):
 def render(drawer):
     hidden = [e for e in drawer["items"] if entry_id(e) in drawer["hidden"]]
     shown = [e for e in drawer["items"] if entry_id(e) not in drawer["hidden"]]
-    return [drawer] + hidden + shown
+    split = next((i for i, e in enumerate(shown) if entry_id(e) in TRAYS), 0)
+    return shown[:split] + [drawer] + hidden + shown[split:]
 
 
 def toggle_in(values, iid):

@@ -182,18 +182,27 @@ Panel {
     }
   }
 
+  function pointerOverIcons() {
+    return rowHover.point.position.x >= root.mapToItem(slotRow, 0, 0).x
+  }
+
+  function updateReveal() {
+    if (!rowHover.hovered) {
+      revealDelay.stop()
+      collapseCheck.restart()
+    } else if (!pointerOverIcons()) {
+      revealDelay.stop()
+    } else if (!revealing && !revealDelay.running) {
+      revealDelay.start()
+    }
+  }
+
   function attachRow() {
     slotRow = findRow()
     if (!slotRow) return
     rowHover = Qt.createQmlObject("import QtQuick; HoverHandler {}", slotRow)
-    rowHover.hoveredChanged.connect(function() {
-      if (rowHover.hovered) {
-        revealDelay.restart()
-      } else {
-        revealDelay.stop()
-        collapseCheck.restart()
-      }
-    })
+    rowHover.hoveredChanged.connect(updateReveal)
+    rowHover.pointChanged.connect(updateReveal)
     applyVisibility()
     attachCenter()
   }
@@ -233,7 +242,7 @@ Panel {
     fontSize: Style.font.bodySmall
   }
 
-  implicitWidth: button.implicitWidth + hiddenTrayIcons.implicitWidth
+  implicitWidth: hiddenTrayIcons.implicitWidth
   implicitHeight: button.implicitHeight
 
   FileView {
@@ -275,10 +284,10 @@ Panel {
 
   WidgetButton {
     id: button
-    anchors.left: parent.left
+    anchors.right: parent.left
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    width: implicitWidth
+    width: 6
     bar: root.bar
     text: "\uf054"
     concealed: true
@@ -289,7 +298,7 @@ Panel {
 
   Row {
     id: hiddenTrayIcons
-    anchors.left: button.right
+    anchors.left: parent.left
     anchors.verticalCenter: parent.verticalCenter
 
     Repeater {
@@ -329,7 +338,7 @@ Panel {
 
         Text {
           textFormat: Text.PlainText
-          text: "Use the arrows to set the order. Hidden items show while the mouse is over this side of the bar. Changes apply when this closes."
+          text: "Use the arrows to set the order. Hidden items show while the mouse is over the icons on this side of the bar. Changes apply when this closes."
           color: Qt.darker(root.bar.foreground, 1.4)
           font.family: root.bar.fontFamily
           font.pixelSize: Style.font.caption
