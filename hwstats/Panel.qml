@@ -28,9 +28,9 @@ Panel {
       { text: stats.cpu + "%", value: stats.cpu, warning: 70, critical: 90 },
       { text: " " },
       { text: stats.cpuTemp + "°", value: stats.cpuTemp, warning: 75, critical: 85 },
-      { text: names ? " RAM " : " \uefc5 " },
+      { text: names ? " / RAM " : " / \uefc5 " },
       { text: stats.memUsed + "G", value: 100 * stats.memUsed / stats.memTotal, warning: 70, critical: 90 },
-      { text: names ? " GPU " : " 󰢮 " },
+      { text: names ? " / GPU " : " / 󰢮 " },
       { text: stats.gpuBusy + "%", value: stats.gpuBusy, warning: 70, critical: 90 },
       { text: " " },
       { text: stats.gpuTemp + "°", value: stats.gpuTemp, warning: 85, critical: 100 }
@@ -147,7 +147,7 @@ Panel {
     labelVisible: false
     tooltipText: root.stats.tooltip || ""
     fontSize: 12
-    horizontalMargin: 7.5
+    horizontalMargin: 3
     onPressed: function(b) { root.toggle() }
 
     Text {
