@@ -44,7 +44,7 @@ def toggle_in(values, iid):
 
 def main():
     if len(sys.argv) < 2:
-        sys.exit("usage: drawer apply [ids...]|hide <id>|tray-hide <id>|tray-order <ids...>")
+        sys.exit("usage: drawer apply [ids...]|hide <id>|tray-hide <id>")
     action = sys.argv[1]
 
     with open(CONFIG, "r+") as handle:
@@ -65,14 +65,11 @@ def main():
                 sys.exit("no tray in the right section")
             tray.setdefault("hidden", [])
             toggle_in(tray["hidden"], sys.argv[2])
-        elif action == "tray-order":
-            if tray is None:
-                sys.exit("no tray in the right section")
-            tray["order"] = sys.argv[2:]
         elif action != "apply":
             sys.exit("unknown action: " + action)
         if action == "apply":
-            order = sys.argv[2:]
+            order = sys.argv[2:] or drawer.get("order", [])
+            drawer["order"] = order
             drawer["items"].sort(key=lambda e: order.index(entry_id(e)) if entry_id(e) in order else len(order))
             config["bar"]["layout"]["right"] = render(drawer)
 

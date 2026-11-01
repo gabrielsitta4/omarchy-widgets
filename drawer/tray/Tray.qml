@@ -22,11 +22,11 @@ BarWidget {
   readonly property var pinnedIds: settings.pinned instanceof Array ? settings.pinned : []
   readonly property var hiddenIds: settings.hidden instanceof Array ? settings.hidden : []
   readonly property var iconOrder: settings.order instanceof Array ? settings.order : []
-  readonly property var hiddenItems: bucket("hidden")
+  property bool iconsDetached: false
   readonly property Component itemDelegate: Component { TrayItem {} }
   readonly property var pinnedItems: {
     var items = bucket("pinned").concat(bucket("drawer"))
-    return items
+    return iconsDetached ? [] : items
   }
   readonly property var drawerItems: []
   readonly property var allItems: bucket("all")
@@ -231,7 +231,7 @@ BarWidget {
     persistTrayState(p, h)
   }
 
-  visible: pinnedItems.length > 0 || drawerCount > 0
+  visible: iconsDetached || pinnedItems.length > 0 || drawerCount > 0
   clip: false
   implicitWidth: root.vertical ? root.barSize : trayContent.implicitWidth
   implicitHeight: root.vertical ? trayContent.implicitHeight : root.barSize

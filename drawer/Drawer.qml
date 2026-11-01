@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Io
-import Quickshell.Services.SystemTray
 import qs.Commons
 import qs.Ui
 
@@ -56,26 +55,35 @@ Panel {
   }
 
   property var trayHiddenIds: []
-  property var trayOrderIds: []
   property var itemDraft: []
-  property var trayDraft: []
-  readonly property var itemRows: orderedIds(itemIds, itemDraft, hiddenIds)
-  readonly property var trayItems: {
-    var values = SystemTray.items.values
-    var result = []
-    for (var i = 0; i < values.length; i++) {
-      if (values[i].status !== Status.Passive) result.push(values[i])
+  readonly property var trayItems: trayWidget ? trayWidget.allItems : []
+  readonly property var trayIds: trayItems.map(function(item) { return String(item.id || "") })
+  readonly property var allHiddenIds: hiddenIds.concat(trayHiddenIds)
+  readonly property var orderIds: {
+    var hiddenTray = trayIds.filter(function(id) { return trayHiddenIds.indexOf(id) !== -1 })
+    var shownTray = trayIds.filter(function(id) { return trayHiddenIds.indexOf(id) === -1 })
+    var base = hiddenTray.concat(itemIds)
+    var marker = base.findIndex(function(id) { return unmanaged.indexOf(id) !== -1 })
+    base.splice.apply(base, [marker + 1, 0].concat(shownTray))
+    var stored = settings.order instanceof Array ? settings.order : []
+    var merged = mergedOrder(base, itemDraft.length > 0 ? itemDraft : stored)
+    return orderedIds(merged, merged, allHiddenIds)
+  }
+  readonly property var panelIds: orderIds.filter(function(id) { return unmanaged.indexOf(id) === -1 })
+  readonly property var panelRows: panelIds.map(function(id) {
+    var index = trayIds.indexOf(id)
+    return { id: id, trayItem: index === -1 ? null : trayItems[index], hidden: allHiddenIds.indexOf(id) !== -1 }
+  })
+
+  function mergedOrder(base, stored) {
+    var result = stored.filter(function(id) { return base.indexOf(id) !== -1 })
+    for (var i = base.length - 1; i >= 0; i--) {
+      if (result.indexOf(base[i]) !== -1) continue
+      var next = i + 1 < base.length ? result.indexOf(base[i + 1]) : -1
+      result.splice(next === -1 ? result.length : next, 0, base[i])
     }
     return result
   }
-
-  readonly property var trayRowIds: orderedIds(
-    trayItems.map(function(item) { return String(item.id || "") }),
-    trayDraft.length > 0 ? trayDraft : trayOrderIds,
-    trayHiddenIds)
-  readonly property var trayRows: trayRowIds.map(function(id) {
-    return trayItems.find(function(item) { return String(item.id || "") === id })
-  })
 
   function orderedIds(ids, order, hidden) {
     var known = order.filter(function(id) { return ids.indexOf(id) !== -1 })
@@ -90,21 +98,24 @@ Panel {
       && (hidden.indexOf(rows[target]) !== -1) === (hidden.indexOf(id) !== -1)
   }
 
-  function swapped(rows, id, delta) {
-    var next = rows.slice()
-    var index = next.indexOf(id)
-    next[index] = next[index + delta]
-    next[index + delta] = id
-    return next
-  }
-
-  function moveItem(id, delta) {
-    itemDraft = swapped(itemRows, id, delta)
+  function moveRow(id, delta) {
+    var other = panelIds[panelIds.indexOf(id) + delta]
+    var next = orderIds.slice()
+    next[orderIds.indexOf(id)] = other
+    next[orderIds.indexOf(other)] = id
+    itemDraft = next
     layoutDirty = true
   }
 
-  function moveTrayItem(id, delta) {
-    trayDraft = swapped(trayRowIds, id, delta)
+  function toggleRow(entry) {
+    if (entry.hidden) {
+      var next = orderIds.filter(function(id) { return id !== entry.id })
+      var marker = next.findIndex(function(id) { return unmanaged.indexOf(id) !== -1 })
+      next.splice(marker + 1, 0, entry.id)
+      itemDraft = next
+    }
+    layoutDirty = true
+    runScript([entry.trayItem ? "tray-hide" : "hide", entry.id])
   }
 
   function readTrayState(raw) {
@@ -114,7 +125,6 @@ Panel {
       var entry = right[i]
       if (entry && (entry.id === "local.tray" || entry.id === "omarchy.tray")) {
         trayHiddenIds = entry.hidden instanceof Array ? entry.hidden : []
-        trayOrderIds = entry.order instanceof Array ? entry.order : []
         return
       }
     }
@@ -162,12 +172,44 @@ Panel {
       if (!slot || !("entry" in slot) || !("moduleName" in slot)) continue
       var id = slot.moduleName
       if (unmanaged.indexOf(id) !== -1) {
-        if (slot.activeItem && "itemDelegate" in slot.activeItem) trayWidget = slot.activeItem
+        if (slot.activeItem && "itemDelegate" in slot.activeItem) {
+          trayWidget = slot.activeItem
+          trayWidget.iconsDetached = true
+        }
         continue
       }
       var show = revealing || hiddenIds.indexOf(id) === -1 || (id === "omarchy.bluetooth" && bluetoothConnected)
       if (slot.visible !== show) slot.visible = show
     }
+    placeTrayIcons()
+  }
+
+  function placeTrayIcons() {
+    var items = {}
+    var slots = slotRow.children
+    for (var i = 0; i < slots.length; i++) {
+      if ("entry" in slots[i] && "moduleName" in slots[i]) items[slots[i].moduleName] = slots[i]
+    }
+    var icons = {}
+    for (var j = 0; j < trayIcons.count; j++) {
+      var icon = trayIcons.itemAt(j)
+      if (!icon) continue
+      var iconId = String(icon.modelData.id || "")
+      icons[iconId] = icon
+      icon.visible = revealing || trayHiddenIds.indexOf(iconId) === -1
+    }
+    var hidden = orderIds.filter(function(id) { return allHiddenIds.indexOf(id) !== -1 })
+    var shown = orderIds.filter(function(id) { return allHiddenIds.indexOf(id) === -1 })
+    var split = Math.max(0, shown.findIndex(function(id) { return unmanaged.indexOf(id) !== -1 }))
+    var sequence = shown.slice(0, split).concat(["local.drawer"], hidden, shown.slice(split))
+    var wanted = sequence.map(function(id) { return icons[id] || items[id] }).filter(function(item) { return item })
+    var current = Array.from(slots).filter(function(item) { return wanted.indexOf(item) !== -1 })
+    if (current.every(function(item, index) { return item === wanted[index] })) return
+    var holder = slotRow.parent
+    wanted.forEach(function(item) {
+      item.parent = holder
+      item.parent = slotRow
+    })
   }
 
   function attachCenter() {
@@ -207,23 +249,15 @@ Panel {
     attachCenter()
   }
 
-  function changeItem(action, id) {
-    layoutDirty = true
-    runScript([action, id])
-  }
-
   onOpenedChanged: {
-    if (opened) return
-    if (trayDraft.length > 0) runScript(["tray-order"].concat(trayDraft))
-    trayDraft = []
-    if (!layoutDirty) return
+    if (opened || !layoutDirty) return
     layoutDirty = false
-    runScript(["apply"].concat(itemDraft))
-    itemDraft = []
+    runScript(["apply"].concat(orderIds))
   }
 
   onRevealingChanged: applyVisibility()
   onHiddenIdsChanged: applyVisibility()
+  onOrderIdsChanged: Qt.callLater(applyVisibility)
   onBluetoothConnectedChanged: applyVisibility()
   Component.onCompleted: Qt.callLater(attachRow)
   Component.onDestruction: if (rowHover) rowHover.destroy()
@@ -249,7 +283,7 @@ Panel {
     opacity: 0.35
   }
 
-  implicitWidth: button.width + hiddenTrayIcons.implicitWidth
+  implicitWidth: button.width
   implicitHeight: button.implicitHeight
 
   FileView {
@@ -304,15 +338,12 @@ Panel {
     onPressed: root.toggle()
   }
 
-  Row {
-    id: hiddenTrayIcons
-    anchors.left: button.right
-    anchors.verticalCenter: parent.verticalCenter
-
-    Repeater {
-      model: root.revealing && root.trayWidget ? root.trayWidget.hiddenItems : []
-      delegate: root.trayWidget ? root.trayWidget.itemDelegate : null
-    }
+  Repeater {
+    id: trayIcons
+    parent: root.slotRow
+    model: root.slotRow ? root.trayItems : []
+    delegate: root.trayWidget ? root.trayWidget.itemDelegate : null
+    onItemAdded: Qt.callLater(root.applyVisibility)
   }
 
   KeyboardPanel {
@@ -355,31 +386,46 @@ Panel {
         }
 
         Repeater {
-          model: root.itemRows
+          model: root.panelRows
 
           Item {
             id: row
-            required property string modelData
+            required property var modelData
             required property int index
-            readonly property bool isHidden: root.hiddenIds.indexOf(modelData) !== -1
+            readonly property bool isTray: modelData.trayItem !== null
+            readonly property bool isHidden: modelData.hidden
             width: column.width
             implicitHeight: 28
 
             HiddenDivider {
-              visible: !row.isHidden && row.index > 0 && root.hiddenIds.indexOf(root.itemRows[row.index - 1]) !== -1
+              visible: !row.isHidden && row.index > 0 && root.panelRows[row.index - 1].hidden
               color: root.bar.foreground
             }
 
             Text {
               id: widgetIconText
+              visible: !row.isTray
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
               width: 18
               textFormat: Text.PlainText
-              text: root.widgetIcon(row.modelData)
+              text: root.widgetIcon(row.modelData.id)
               color: row.isHidden ? Qt.darker(root.bar.foreground, 1.6) : root.bar.foreground
               font.family: root.bar.fontFamily
               font.pixelSize: Style.font.bodySmall
+            }
+
+            Image {
+              visible: row.isTray
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              width: 16
+              height: 16
+              fillMode: Image.PreserveAspectFit
+              sourceSize.width: Math.round(16 * Screen.devicePixelRatio)
+              sourceSize.height: Math.round(16 * Screen.devicePixelRatio)
+              source: row.isTray ? String(row.modelData.trayItem.icon || "") : ""
+              opacity: row.isHidden ? 0.5 : 1
             }
 
             Text {
@@ -389,7 +435,7 @@ Panel {
               anchors.rightMargin: Style.space(8)
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: root.displayName(row.modelData)
+              text: row.isTray ? root.trayName(row.modelData.trayItem) : root.displayName(row.modelData.id)
               color: row.isHidden ? Qt.darker(root.bar.foreground, 1.6) : root.bar.foreground
               font.family: root.bar.fontFamily
               font.pixelSize: Style.font.bodySmall
@@ -398,7 +444,6 @@ Panel {
 
             Button {
               id: hideButton
-              visible: root.unmanaged.indexOf(row.modelData) === -1
               anchors.verticalCenter: parent.verticalCenter
               anchors.right: moveUpButton.left
               anchors.rightMargin: Style.space(6)
@@ -409,7 +454,7 @@ Panel {
               verticalPadding: 3
               iconSize: Style.font.bodySmall
               fontSize: Style.font.bodySmall
-              onClicked: root.changeItem("hide", row.modelData)
+              onClicked: root.toggleRow(row.modelData)
             }
 
             MoveButton {
@@ -417,8 +462,8 @@ Panel {
               anchors.right: moveDownButton.left
               iconText: "\uf077"
               foreground: root.bar.foreground
-              enabled: root.canMove(root.itemRows, root.hiddenIds, row.modelData, -1)
-              onClicked: root.moveItem(row.modelData, -1)
+              enabled: root.canMove(root.panelIds, root.allHiddenIds, row.modelData.id, -1)
+              onClicked: root.moveRow(row.modelData.id, -1)
             }
 
             MoveButton {
@@ -426,94 +471,8 @@ Panel {
               anchors.right: parent.right
               iconText: "\uf078"
               foreground: root.bar.foreground
-              enabled: root.canMove(root.itemRows, root.hiddenIds, row.modelData, 1)
-              onClicked: root.moveItem(row.modelData, 1)
-            }
-          }
-        }
-
-        PanelSectionHeader {
-          visible: root.trayItems.length > 0
-          text: "TRAY ICONS"
-          foreground: root.bar.foreground
-          fontFamily: root.bar.fontFamily
-        }
-
-        Repeater {
-          model: root.trayRows
-
-          Item {
-            id: trayRow
-            required property var modelData
-            required property int index
-            readonly property string itemId: String(modelData.id || "")
-            readonly property bool isHidden: root.trayHiddenIds.indexOf(itemId) !== -1
-            width: column.width
-            implicitHeight: 28
-
-            HiddenDivider {
-              visible: !trayRow.isHidden && trayRow.index > 0 && root.trayHiddenIds.indexOf(root.trayRowIds[trayRow.index - 1]) !== -1
-              color: root.bar.foreground
-            }
-
-            Image {
-              id: trayIconImage
-              anchors.left: parent.left
-              anchors.verticalCenter: parent.verticalCenter
-              width: 16
-              height: 16
-              fillMode: Image.PreserveAspectFit
-              sourceSize.width: Math.round(16 * Screen.devicePixelRatio)
-              sourceSize.height: Math.round(16 * Screen.devicePixelRatio)
-              source: String(trayRow.modelData.icon || "")
-              opacity: trayRow.isHidden ? 0.5 : 1
-            }
-
-            Text {
-              anchors.left: trayIconImage.right
-              anchors.leftMargin: Style.space(8)
-              anchors.right: trayHideButton.left
-              anchors.rightMargin: Style.space(8)
-              anchors.verticalCenter: parent.verticalCenter
-              textFormat: Text.PlainText
-              text: root.trayName(trayRow.modelData)
-              color: trayRow.isHidden ? Qt.darker(root.bar.foreground, 1.6) : root.bar.foreground
-              font.family: root.bar.fontFamily
-              font.pixelSize: Style.font.bodySmall
-              elide: Text.ElideRight
-            }
-
-            Button {
-              id: trayHideButton
-              anchors.verticalCenter: parent.verticalCenter
-              anchors.right: trayMoveUpButton.left
-              anchors.rightMargin: Style.space(6)
-              iconText: "\uf06e"
-              text: trayRow.isHidden ? "Show" : "Hide"
-              foreground: root.bar.foreground
-              horizontalPadding: 8
-              verticalPadding: 3
-              iconSize: Style.font.bodySmall
-              fontSize: Style.font.bodySmall
-              onClicked: root.runScript(["tray-hide", trayRow.itemId])
-            }
-
-            MoveButton {
-              id: trayMoveUpButton
-              anchors.right: trayMoveDownButton.left
-              iconText: "\uf077"
-              foreground: root.bar.foreground
-              enabled: root.canMove(root.trayRowIds, root.trayHiddenIds, trayRow.itemId, -1)
-              onClicked: root.moveTrayItem(trayRow.itemId, -1)
-            }
-
-            MoveButton {
-              id: trayMoveDownButton
-              anchors.right: parent.right
-              iconText: "\uf078"
-              foreground: root.bar.foreground
-              enabled: root.canMove(root.trayRowIds, root.trayHiddenIds, trayRow.itemId, 1)
-              onClicked: root.moveTrayItem(trayRow.itemId, 1)
+              enabled: root.canMove(root.panelIds, root.allHiddenIds, row.modelData.id, 1)
+              onClicked: root.moveRow(row.modelData.id, 1)
             }
           }
         }

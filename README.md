@@ -72,7 +72,7 @@ omarchy restart shell
 
 - Hover the tray or anything to its right. The hidden widgets and tray icons open together next to the tray, pushing the widgets before them to the left, and close when the mouse leaves that side of the bar. Hovering the widgets before the tray does not open them, so those widgets do not move under the mouse. A panel opened from one of them keeps them visible until it closes.
 - Bluetooth set to hidden still shows while a device is connected, and hides again when the last one disconnects.
-- Click the gear at the left end of the open group, or run `omarchy-shell local.drawer toggle`, to hide or show each widget and tray icon and to reorder them with the up and down arrows. Hidden items sit right before the tray, and a line separates them from the rest in the list. Changes apply when the list closes.
+- Click the gear at the left end of the open group, or run `omarchy-shell local.drawer toggle`, to hide or show each widget and tray icon and to reorder them with the up and down arrows. Everything is in one list, and a line separates the hidden items from the rest. Changes apply when the list closes.
 
 The drawer hides its neighbours in the bar without rebuilding it, so it relies on how the Omarchy bar is laid out. Check it after `omarchy update`. If that layout changes, every widget simply stays visible.
 
