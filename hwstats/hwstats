@@ -18,6 +18,20 @@ hwmon_by_label() {
   done
 }
 
+sensor() {
+  local dir=$1 label=$2 lbl
+  for lbl in "$dir"/temp*_label "$dir"/freq*_label; do
+    if [ "$(cat "$lbl" 2>/dev/null)" = "$label" ]; then
+      cat "${lbl%_label}_input"
+      return
+    fi
+  done
+}
+
+scaled() {
+  echo $(( ${1:-0} / $2 ))
+}
+
 cpu_sample() {
   awk 'NR == 1 { idle = $5 + $6; total = 0; for (i = 2; i <= NF; i++) total += $i; print idle, total }' /proc/stat
 }
@@ -46,4 +60,29 @@ vram_total=$(awk '{ printf "%.0f", $1 / 1073741824 }' "$gpu_device/mem_info_vram
 text=" ${cpu}% ${cpu_temp}°   ${mem_used}G  󰢮 ${gpu_busy}% ${gpu_temp}°"
 tooltip="CPU ${cpu}% at ${cpu_temp}°C\\nRAM ${mem_used} / ${mem_total} GB\\nGPU ${gpu_busy}% at ${gpu_temp}°C (junction)\\nVRAM ${vram_used} / ${vram_total} GB"
 
-printf '{"text":"%s","tooltip":"%s"}\n' "$text" "$tooltip"
+gpu_hwmon=$(dirname "$gpu_temp_file")
+power_file="$gpu_hwmon/power1_average"
+[ -r "$power_file" ] || power_file="$gpu_hwmon/power1_input"
+gpu_json=$(printf '{"busy":%d,"core":%d,"memory":%d,"edge":%d,"powerW":%d,"capW":%d,"sclkMhz":%d,"mclkMhz":%d,"fanRpm":%d,"vramUsed":%s,"vramTotal":%s}' \
+  "${gpu_busy:-0}" "${gpu_temp:-0}" \
+  "$(scaled "$(sensor "$gpu_hwmon" mem)" 1000)" \
+  "$(scaled "$(sensor "$gpu_hwmon" edge)" 1000)" \
+  "$(scaled "$(cat "$power_file" 2>/dev/null)" 1000000)" \
+  "$(scaled "$(cat "$gpu_hwmon/power1_cap" 2>/dev/null)" 1000000)" \
+  "$(scaled "$(sensor "$gpu_hwmon" sclk)" 1000000)" \
+  "$(scaled "$(sensor "$gpu_hwmon" mclk)" 1000000)" \
+  "$(cat "$gpu_hwmon/fan1_input" 2>/dev/null || echo 0)" \
+  "${vram_used:-0}" "${vram_total:-0}")
+
+igpu_json=null
+for dir in /sys/class/hwmon/hwmon*; do
+  [ "$(cat "$dir/name" 2>/dev/null)" = amdgpu ] && [ "$dir" != "$gpu_hwmon" ] || continue
+  igpu_device=$(readlink -f "$dir/device")
+  igpu_json=$(printf '{"busy":%d,"temp":%d,"vramUsedMb":%d,"vramTotalMb":%d}' \
+    "$(cat "$igpu_device/gpu_busy_percent" 2>/dev/null || echo 0)" \
+    "$(scaled "$(sensor "$dir" edge)" 1000)" \
+    "$(scaled "$(cat "$igpu_device/mem_info_vram_used" 2>/dev/null)" 1048576)" \
+    "$(scaled "$(cat "$igpu_device/mem_info_vram_total" 2>/dev/null)" 1048576)")
+done
+
+printf '{"text":"%s","tooltip":"%s","gpu":%s,"igpu":%s}\n' "$text" "$tooltip" "$gpu_json" "$igpu_json"

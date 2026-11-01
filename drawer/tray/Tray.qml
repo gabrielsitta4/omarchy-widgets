@@ -21,12 +21,11 @@ BarWidget {
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
   readonly property var pinnedIds: settings.pinned instanceof Array ? settings.pinned : []
   readonly property var hiddenIds: settings.hidden instanceof Array ? settings.hidden : []
-  readonly property bool drawerExpanded: settings.drawerExpanded !== false
-  property bool revealHidden: false
+  readonly property var iconOrder: settings.order instanceof Array ? settings.order : []
+  readonly property var hiddenItems: bucket("hidden")
+  readonly property Component itemDelegate: Component { TrayItem {} }
   readonly property var pinnedItems: {
-    var items = bucket("pinned")
-    if (drawerExpanded) items = items.concat(bucket("drawer"))
-    if (drawerExpanded && revealHidden) items = bucket("hidden").concat(items)
+    var items = bucket("pinned").concat(bucket("drawer"))
     return items
   }
   readonly property var drawerItems: []
@@ -185,7 +184,21 @@ BarWidget {
       }
       if (classifyItem(item) === category) result.push(item)
     }
-    return result
+    return inIconOrder(result)
+  }
+
+  function inIconOrder(items) {
+    var rest = items.slice()
+    var sorted = []
+    for (var i = 0; i < iconOrder.length; i++) {
+      for (var j = 0; j < rest.length; j++) {
+        if (String(rest[j].id || "") === iconOrder[i]) {
+          sorted.push(rest.splice(j, 1)[0])
+          break
+        }
+      }
+    }
+    return sorted.concat(rest)
   }
 
   function persistTrayState(pinned, hidden) {

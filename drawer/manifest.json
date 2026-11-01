@@ -4,7 +4,7 @@
   "name": "Drawer",
   "version": "1.0.0",
   "author": "local",
-  "description": "Collapse the right side widgets into a drawer with pin and hide",
+  "description": "Hide right side widgets and tray icons until hovered",
   "kinds": [
     "bar-widget"
   ],
@@ -13,7 +13,7 @@
   },
   "barWidget": {
     "displayName": "Drawer",
-    "description": "Collapse the right side widgets into a drawer with pin and hide",
+    "description": "Hide right side widgets and tray icons until hovered",
     "category": "System",
     "allowMultiple": false
   }

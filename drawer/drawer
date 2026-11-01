@@ -7,7 +7,6 @@ import sys
 CONFIG = os.path.expanduser("~/.config/omarchy/shell.json")
 DRAWER = "local.drawer"
 TRAYS = {"local.tray", "omarchy.tray"}
-UNMANAGED = {DRAWER} | TRAYS
 
 
 def entry_id(entry):
@@ -16,7 +15,7 @@ def entry_id(entry):
 
 def sync(drawer, right):
     hidden = drawer["hidden"]
-    current = [e for e in right if entry_id(e) not in UNMANAGED]
+    current = [e for e in right if entry_id(e) != DRAWER]
     by_id = {entry_id(e): e for e in current}
     items = [by_id.get(entry_id(e), e) for e in drawer.get("items", [])]
     known = {entry_id(e) for e in items}
@@ -29,25 +28,22 @@ def sync(drawer, right):
     drawer["items"] = items
 
 
-def render(drawer, right):
-    trays = [e for e in right if entry_id(e) in TRAYS]
+def render(drawer):
     hidden = [e for e in drawer["items"] if entry_id(e) in drawer["hidden"]]
     shown = [e for e in drawer["items"] if entry_id(e) not in drawer["hidden"]]
-    return [drawer] + hidden + trays + shown
+    return [drawer] + hidden + shown
 
 
-def toggle_in(values, iid, other):
+def toggle_in(values, iid):
     if iid in values:
         values.remove(iid)
     else:
         values.append(iid)
-        if iid in other:
-            other.remove(iid)
 
 
 def main():
     if len(sys.argv) < 2:
-        sys.exit("usage: drawer toggle|apply|pin <id>|hide <id>|tray-pin <id>|tray-hide <id>")
+        sys.exit("usage: drawer apply [ids...]|hide <id>|tray-hide <id>|tray-order <ids...>")
     action = sys.argv[1]
 
     with open(CONFIG, "r+") as handle:
@@ -57,30 +53,27 @@ def main():
         drawer = next((e for e in right if isinstance(e, dict) and e.get("id") == DRAWER), None)
         if drawer is None:
             sys.exit("local.drawer is not in the right section")
-        drawer.setdefault("pinned", [])
         drawer.setdefault("hidden", [])
 
         sync(drawer, right)
         tray = next((e for e in right if isinstance(e, dict) and e.get("id") in TRAYS), None)
-        if action == "toggle":
-            drawer["expanded"] = not drawer.get("expanded", True)
-        elif action == "pin":
-            toggle_in(drawer["pinned"], sys.argv[2], drawer["hidden"])
-        elif action == "hide":
-            toggle_in(drawer["hidden"], sys.argv[2], drawer["pinned"])
-        elif action in ("tray-pin", "tray-hide"):
+        if action == "hide":
+            toggle_in(drawer["hidden"], sys.argv[2])
+        elif action == "tray-hide":
             if tray is None:
                 sys.exit("no tray in the right section")
-            tray.setdefault("pinned", [])
             tray.setdefault("hidden", [])
-            first, second = ("pinned", "hidden") if action == "tray-pin" else ("hidden", "pinned")
-            toggle_in(tray[first], sys.argv[2], tray[second])
+            toggle_in(tray["hidden"], sys.argv[2])
+        elif action == "tray-order":
+            if tray is None:
+                sys.exit("no tray in the right section")
+            tray["order"] = sys.argv[2:]
         elif action != "apply":
             sys.exit("unknown action: " + action)
-        if tray is not None:
-            tray["drawerExpanded"] = drawer.get("expanded", True)
         if action == "apply":
-            config["bar"]["layout"]["right"] = render(drawer, right)
+            order = sys.argv[2:]
+            drawer["items"].sort(key=lambda e: order.index(entry_id(e)) if entry_id(e) in order else len(order))
+            config["bar"]["layout"]["right"] = render(drawer)
 
         handle.seek(0)
         handle.truncate()

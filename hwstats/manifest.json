@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "local.hwstats",
+  "name": "Hardware",
+  "version": "1.0.0",
+  "author": "local",
+  "description": "CPU, RAM and GPU stats with a GPU details panel",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Hardware",
+    "description": "CPU, RAM and GPU stats with a GPU details panel",
+    "category": "System",
+    "allowMultiple": false
+  }
+}

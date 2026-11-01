@@ -9,9 +9,9 @@ Bar widgets for the Omarchy shell. Install only the ones you want.
 | Folder | What it does |
 |---|---|
 | [`apps`](#apps) | Lists the open windows with a force kill button |
-| [`drawer`](#drawer) | Folds the right side of the bar into a drawer, tray icons included |
+| [`drawer`](#drawer) | Hides right side widgets and tray icons until you hover that side of the bar |
 | [`headset`](#headset) | Logitech G733 battery, sidetone and lights in the audio panel |
-| [`hwstats`](#hwstats) | CPU, RAM and GPU usage and temperature |
+| [`hwstats`](#hwstats) | CPU, RAM and GPU stats with a GPU details panel |
 | [`media`](#media) | Media controls for any MPRIS player |
 
 ## Install
@@ -55,7 +55,7 @@ o.bind("SUPER + SHIFT + W", "Force kill window", "force-kill")
 
 ## Drawer
 
-Folds the right side of the bar into a drawer, tray icons included. You choose what stays pinned and what stays hidden.
+Hides the right side widgets and tray icons you choose until the mouse is over that side of the bar.
 
 ```bash
 ln -s ~/Documents/Projects/omarchy-widgets/drawer ~/.config/omarchy/plugins/local.drawer
@@ -69,9 +69,8 @@ omarchy restart shell
 
 `local.tray` replaces the stock tray so the tray icons follow the drawer and the bar shows a single arrow.
 
-- Click the arrow to collapse or expand the drawer. Collapsed, only pinned widgets and tray icons stay visible.
-- With the drawer open, hover the arrow to show the hidden items. They open to the left and go away when the mouse leaves the bar. A panel opened from one of them keeps them visible until it closes.
-- Right click the arrow to pin or hide each widget and tray icon. Changes apply when the list closes.
+- Hover the widgets on the right side of the bar. The hidden widgets and tray icons open together on the left and close when the mouse leaves. A panel opened from one of them keeps them visible until it closes.
+- Right click the empty spot at the far left of that group, or run `omarchy-shell local.drawer toggle`, to hide or show each widget and tray icon and to reorder them with the up and down arrows. Hidden items stay to the left of the visible ones. Changes apply when the list closes.
 
 The drawer hides its neighbours in the bar without rebuilding it, so it relies on how the Omarchy bar is laid out. Check it after `omarchy update`. If that layout changes, every widget simply stays visible.
 
@@ -113,26 +112,19 @@ Shows CPU usage and temperature, RAM in use, and GPU usage and temperature.
  2% 43°   8.1G  󰢮 0% 45°
 ```
 
-Icons are CPU, RAM and GPU, drawn with a Nerd Font (JetBrainsMono Nerd Font comes with Omarchy). Hover it to see RAM and VRAM totals. Click it to open `btop`.
+Icons are CPU, RAM and GPU, drawn with a Nerd Font (JetBrainsMono Nerd Font comes with Omarchy). Hover it to see RAM and VRAM totals. Click it to open a panel with GPU usage history, VRAM, temperatures, power, clocks and fan, plus the integrated GPU when there is one and a button to open `btop`.
 
 Needs an AMD CPU (`k10temp` sensor) and an AMD GPU (`amdgpu` sensor). Sensors are found by name, so it keeps working when the hwmon numbers change after a reboot.
 
 ```bash
+ln -s ~/Documents/Projects/omarchy-widgets/hwstats ~/.config/omarchy/plugins/local.hwstats
 ln -s ~/Documents/Projects/omarchy-widgets/hwstats/hwstats ~/.config/omarchy/bar/scripts/hwstats
+omarchy-shell shell rescanPlugins
+omarchy bar put local.hwstats --before omarchy.audio
+omarchy bar set local.hwstats gpuName "RX 9070 XT"
 ```
 
-Then add the module to a section under `bar.layout` in `~/.config/omarchy/shell.json`:
-
-```json
-{
-  "id": "local.hwstats",
-  "type": "command",
-  "exec": "~/.config/omarchy/bar/scripts/hwstats",
-  "interval": 3,
-  "tooltip": "Hardware",
-  "onClick": "omarchy launch or focus tui btop"
-}
-```
+`gpuName` is the title of the panel and is optional.
 
 The shell reloads on save. Check the output with `~/.config/omarchy/bar/scripts/hwstats`.
 
