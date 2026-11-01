@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Bluetooth
 import Quickshell.Io
 import Quickshell.Services.SystemTray
 import qs.Commons
@@ -13,6 +14,7 @@ Panel {
   readonly property string script: Quickshell.env("HOME") + "/.config/omarchy/plugins/local.drawer/drawer"
   readonly property var unmanaged: ["local.drawer", "local.tray", "omarchy.tray"]
   property bool revealing: false
+  readonly property bool bluetoothConnected: Bluetooth.devices.values.some(function(device) { return device.connected })
   property var slotRow: null
   property var rowHover: null
   property var trayWidget: null
@@ -163,7 +165,7 @@ Panel {
         if (slot.activeItem && "itemDelegate" in slot.activeItem) trayWidget = slot.activeItem
         continue
       }
-      var show = revealing || hiddenIds.indexOf(id) === -1
+      var show = revealing || hiddenIds.indexOf(id) === -1 || (id === "omarchy.bluetooth" && bluetoothConnected)
       if (slot.visible !== show) slot.visible = show
     }
   }
@@ -213,6 +215,7 @@ Panel {
 
   onRevealingChanged: applyVisibility()
   onHiddenIdsChanged: applyVisibility()
+  onBluetoothConnectedChanged: applyVisibility()
   Component.onCompleted: Qt.callLater(attachRow)
   Component.onDestruction: if (rowHover) rowHover.destroy()
 
