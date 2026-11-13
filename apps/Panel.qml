@@ -39,8 +39,8 @@ Panel {
   }
 
   function kill(pid) {
-    killProc.command = [forceKill, String(pid)]
-    killProc.running = true
+    Quickshell.execDetached([forceKill, String(pid)])
+    refreshDelay.restart()
   }
 
   onOpenedChanged: if (opened) refresh()
@@ -52,11 +52,6 @@ Panel {
     id: listProc
     command: ["hyprctl", "clients", "-j"]
     stdout: StdioCollector { waitForEnd: true; onStreamFinished: root.updateWindows(text) }
-  }
-
-  Process {
-    id: killProc
-    onExited: refreshDelay.restart()
   }
 
   Timer {
