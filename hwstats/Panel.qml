@@ -152,7 +152,7 @@ Panel {
 
     Text {
       anchors.centerIn: parent
-      anchors.verticalCenterOffset: 1
+      anchors.verticalCenterOffset: 3
       textFormat: Text.StyledText
       text: root.barMarkup()
       color: button.foreground

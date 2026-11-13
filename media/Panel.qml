@@ -84,6 +84,7 @@ Panel {
       text: "󰒮"
       horizontalMargin: 5
       visible: root.display !== "name"
+      transform: Translate { y: 2 }
       dimmed: !(root.player && root.player.canGoPrevious)
       onPressed: function(b) { root.press(b, "previous") }
     }
@@ -93,6 +94,7 @@ Panel {
       text: root.playing ? "󰏤" : "󰐊"
       horizontalMargin: 5
       visible: root.display !== "name"
+      transform: Translate { y: 2 }
       onPressed: function(b) { root.press(b, "playPause") }
     }
 
@@ -101,6 +103,7 @@ Panel {
       text: "󰒭"
       horizontalMargin: 5
       visible: root.display !== "name"
+      transform: Translate { y: 2 }
       dimmed: !(root.player && root.player.canGoNext)
       onPressed: function(b) { root.press(b, "next") }
     }

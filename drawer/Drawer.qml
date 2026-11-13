@@ -12,6 +12,7 @@ Panel {
 
   readonly property string script: Quickshell.env("HOME") + "/.config/omarchy/plugins/local.drawer/drawer"
   readonly property var unmanaged: ["local.drawer", "local.tray", "omarchy.tray"]
+  readonly property var loweredIcons: ["local.apps", "omarchy.agents", "omarchy.bluetooth", "omarchy.monitor", "local.casa", "omarchy.audio", "omarchy.network"]
   property bool revealing: false
   readonly property bool bluetoothConnected: Bluetooth.devices.values.some(function(device) { return device.connected })
   property var slotRow: null
@@ -171,6 +172,7 @@ Panel {
       var slot = slots[i]
       if (!slot || !("entry" in slot) || !("moduleName" in slot)) continue
       var id = slot.moduleName
+      if (loweredIcons.indexOf(id) !== -1) slot.transform = [iconShift]
       if (unmanaged.indexOf(id) !== -1) {
         if (slot.activeItem && "itemDelegate" in slot.activeItem) {
           trayWidget = slot.activeItem
@@ -214,21 +216,24 @@ Panel {
 
   function attachCenter() {
     if (!bar || bar.vertical) return
-    var sections = slotRow.parent.parent.children
+    var sections = slotRow.parent.children
     for (var i = 0; i < sections.length; i++) {
-      if (!("hasAnchor" in sections[i])) continue
-      rightSection = slotRow.parent
-      centerContent = sections[i].children[0].item
+      if (!("drawn" in sections[i])) continue
+      rightSection = slotRow
+      centerContent = Array.from(sections[i].children).find(function(item) { return "besideRight" in item })
+      if (!centerContent) return
       centerContent.transform = [centerShift]
-      Array.from(centerContent.children).forEach(function(item) {
-        if (item.moduleName === "omarchy.clock") item.transform = [clockTextShift]
-        if (!item.item) return
-        Array.from(item.item.children).forEach(function(slot) {
-          if (slot.moduleName === "omarchy.weather") slot.transform = [weatherIconShift]
-        })
-      })
+      shiftCenterSlots(centerContent)
       return
     }
+  }
+
+  function shiftCenterSlots(item) {
+    Array.from(item.children).forEach(function(child) {
+      if (child.moduleName === "omarchy.clock") child.transform = [clockTextShift]
+      else if (child.moduleName === "omarchy.weather") child.transform = [weatherIconShift]
+      else shiftCenterSlots(child)
+    })
   }
 
   function pointerOverIcons() {
@@ -306,6 +311,11 @@ Panel {
   }
 
   Translate {
+    id: iconShift
+    y: 1
+  }
+
+  Translate {
     id: clockTextShift
     y: 1
   }
@@ -313,7 +323,7 @@ Panel {
   Translate {
     id: weatherIconShift
     x: -6
-    y: -2
+    y: 1
   }
 
   Timer {
