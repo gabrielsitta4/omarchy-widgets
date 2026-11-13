@@ -12,7 +12,8 @@ if [[ -z $battery ]]; then
 fi
 
 mkdir -p "$state"
-if [[ ! -e $state/online ]] && { [[ ! -e $state/light ]] || headsetcontrol -l "$(<"$state/light")" >/dev/null; }; then
+restore() { [[ ! -e $state/$1 ]] || headsetcontrol "$2" "$(<"$state/$1")" >/dev/null; }
+if [[ ! -e $state/online ]] && restore light -l && restore sidetone -s; then
   touch "$state/online"
 fi
 
