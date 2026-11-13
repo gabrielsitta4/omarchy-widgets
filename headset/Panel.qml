@@ -91,6 +91,7 @@ Panel {
   function attachToAudioPanel() {
     if (section) return
     var popup = findPopup(findAudioPanel())
+    if (popup && "ensureContent" in popup) popup.ensureContent()
     var column = findColumn(popup)
     if (!column) return
     var created = sectionComponent.createObject(column)
