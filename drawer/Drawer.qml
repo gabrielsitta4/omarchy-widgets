@@ -255,6 +255,7 @@ Panel {
     rowHover = Qt.createQmlObject("import QtQuick; HoverHandler {}", slotRow)
     rowHover.hoveredChanged.connect(updateReveal)
     rowHover.pointChanged.connect(updateReveal)
+    if (!bar.vertical) slotRow.transform = [rowShift]
     applyVisibility()
     attachCenter()
   }
@@ -306,6 +307,11 @@ Panel {
   Translate {
     id: centerShift
     x: -root.centerOverlap
+  }
+
+  Translate {
+    id: rowShift
+    y: -1
   }
 
   Translate {
@@ -370,7 +376,8 @@ Panel {
     model: root.slotRow ? root.trayItems : []
     delegate: root.trayWidget ? root.trayWidget.itemDelegate : null
     onItemAdded: function(index, item) {
-      item.height = root.bar.barSize
+      item.implicitHeight = root.bar.barSize
+      item.transform = [iconShift]
       Qt.callLater(root.applyVisibility)
     }
   }
