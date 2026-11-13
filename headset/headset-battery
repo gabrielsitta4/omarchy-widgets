@@ -1,5 +1,7 @@
 #!/bin/bash
 state=~/.local/state/headset
+exec 9>"$XDG_RUNTIME_DIR/headset.lock"
+flock 9
 battery=$(headsetcontrol -b -o json 2>/dev/null | jq -c '
   .devices[0].battery
   | select(.status == "BATTERY_AVAILABLE" or .status == "BATTERY_CHARGING")')

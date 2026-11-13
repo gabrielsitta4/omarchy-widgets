@@ -4,6 +4,8 @@ case $1 in
   light) flag=-l ;;
   *) exit 1 ;;
 esac
+exec 9>"$XDG_RUNTIME_DIR/headset.lock"
+flock 9
 headsetcontrol "$flag" "$2" >/dev/null || exit 1
 sleep 0.5
 mkdir -p ~/.local/state/headset
