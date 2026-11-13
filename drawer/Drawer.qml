@@ -45,11 +45,9 @@ Panel {
   readonly property var hiddenIds: settings.hidden instanceof Array ? settings.hidden : []
   readonly property var itemIds: {
     var ids = []
-    var stored = settings.items instanceof Array ? settings.items : []
     var layout = bar && bar.layoutConfig && bar.layoutConfig.right instanceof Array ? bar.layoutConfig.right : []
-    var all = stored.concat(layout)
-    for (var i = 0; i < all.length; i++) {
-      var id = typeof all[i] === "string" ? all[i] : String(all[i].id || "")
+    for (var i = 0; i < layout.length; i++) {
+      var id = typeof layout[i] === "string" ? layout[i] : String(layout[i].id || "")
       if (id && ids.indexOf(id) === -1 && id !== "local.drawer") ids.push(id)
     }
     return ids

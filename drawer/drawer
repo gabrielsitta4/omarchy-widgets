@@ -17,7 +17,7 @@ def sync(drawer, right):
     hidden = drawer["hidden"]
     current = [e for e in right if entry_id(e) != DRAWER]
     by_id = {entry_id(e): e for e in current}
-    items = [by_id.get(entry_id(e), e) for e in drawer.get("items", [])]
+    items = [by_id[entry_id(e)] for e in drawer.get("items", []) if entry_id(e) in by_id]
     known = {entry_id(e) for e in items}
     items += [e for e in current if entry_id(e) not in known]
 
