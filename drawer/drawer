@@ -5,6 +5,7 @@ import os
 import sys
 
 CONFIG = os.path.expanduser("~/.config/omarchy/shell.json")
+LOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "drawer.lock")
 DRAWER = "local.drawer"
 TRAYS = {"local.tray", "omarchy.tray"}
 
@@ -47,9 +48,10 @@ def main():
         sys.exit("usage: drawer apply [ids...]|hide <id>|tray-hide <id>")
     action = sys.argv[1]
 
-    with open(CONFIG, "r+") as handle:
-        fcntl.flock(handle, fcntl.LOCK_EX)
-        config = json.load(handle)
+    with open(LOCK, "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        with open(CONFIG) as handle:
+            config = json.load(handle)
         right = config["bar"]["layout"]["right"]
         drawer = next((e for e in right if isinstance(e, dict) and e.get("id") == DRAWER), None)
         if drawer is None:
@@ -73,9 +75,11 @@ def main():
             drawer["items"].sort(key=lambda e: order.index(entry_id(e)) if entry_id(e) in order else len(order))
             config["bar"]["layout"]["right"] = render(drawer)
 
-        handle.seek(0)
-        handle.truncate()
-        handle.write(json.dumps(config, indent=2) + "\n")
+        temp = CONFIG + ".drawer-tmp"
+        with open(temp, "w") as handle:
+            handle.write(json.dumps(config, indent=2) + "\n")
+        os.chmod(temp, os.stat(CONFIG).st_mode)
+        os.replace(temp, CONFIG)
 
 
 main()
