@@ -266,6 +266,7 @@ Panel {
     runScript(["apply"].concat(orderIds))
   }
 
+  onSettingsChanged: if (!opened) itemDraft = []
   onRevealingChanged: applyVisibility()
   onHiddenIdsChanged: applyVisibility()
   onOrderIdsChanged: Qt.callLater(applyVisibility)
