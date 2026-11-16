@@ -12,7 +12,6 @@ Bar widgets for the Omarchy shell. Install only the ones you want.
 | [`drawer`](#drawer) | Hides right side widgets and tray icons until you hover that side of the bar |
 | [`headset`](#headset) | Logitech G733 battery, sidetone and lights in the audio panel |
 | [`hwstats`](#hwstats) | CPU, RAM and GPU stats with a GPU details panel |
-| [`media`](#media) | Media controls for any MPRIS player |
 | [`workspaces`](#workspaces) | Shows only the workspaces in use, with fewer on a TV |
 
 ## Install
@@ -142,19 +141,3 @@ omarchy bar set local.hwstats gpuName "RX 9070 XT"
 The shell reloads on save. Check the output with `~/.config/omarchy/bar/scripts/hwstats`.
 
 The bar is the same on every monitor, so on a narrow screen the text can overlap the center widgets.
-
-## Media
-
-Controls any MPRIS player (YouTube Music, Spotify, browser tabs): previous, play/pause, next and the current track, with a popup that has the cover and a seek bar.
-
-```bash
-ln -s ~/Documents/Projects/omarchy-widgets/media ~/.config/omarchy/plugins/local.media
-omarchy-shell shell rescanPlugins
-omarchy bar put local.media --section right --index 0
-```
-
-- The buttons skip back, play/pause and skip forward. Any MPRIS player counts (music, videos, mpv). The widget stays while a player is playing or paused and hides when there is none.
-- Click the track name, or right click any button, to open the popup. Drag the bar to jump inside the track.
-- Pick what the bar shows under DISPLAY in the popup: the buttons and the name, only the name, or only the buttons. Same from the terminal: `omarchy bar set local.media display name` (`both`, `name`, `controls`).
-- With more than one player open, the popup lists them so you can pick which one the buttons control.
-- Track name length on the bar: `omarchy bar set local.media maxChars 40`.

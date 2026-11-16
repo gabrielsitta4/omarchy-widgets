@@ -30,7 +30,6 @@ Panel {
     return Math.max(0, edge - rightSection.x)
   }
   readonly property var widgetIcons: ({
-    "local.media": "󰝚",
     "omarchy.agents": "󰚩",
     "omarchy.bluetooth": "󰂯",
     "omarchy.network": "󰖩",
